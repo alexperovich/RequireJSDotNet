@@ -481,13 +481,18 @@ namespace RequireJsNet.Compressor.Parsing
                 }
 
                 // check if our containing function has one argument with the same name as the factory identifier we've received
+
+                if (!(containingCall.Callee is FunctionExpression))
+                {
+                    return;
+                }
                 var containingCallee = containingCall.Callee.As<FunctionExpression>();
                 if (containingCallee.Parameters.Count() != 1)
                 {
                     return;
                 }
 
-                var calleeParam = containingCallee.Parameters.ElementAt(0).As<Identifier>();
+                var calleeParam = containingCallee.Parameters.ElementAt(0);
                 if (calleeParam == null)
                 {
                     return;
@@ -498,6 +503,12 @@ namespace RequireJsNet.Compressor.Parsing
                     return;
                 }
 
+                if (
+                    !(containingCall.Arguments.ElementAt(0) is
+                      FunctionExpression))
+                {
+                    return;
+                }
                 var argumentFunction = containingCall.Arguments.ElementAt(0).As<FunctionExpression>();
                 if (argumentFunction == null)
                 {
