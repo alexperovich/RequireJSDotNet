@@ -5,11 +5,12 @@
 // http://www.opensource.org/licenses/mit-license.php
 // http://www.gnu.org/licenses/gpl.html
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-
+using System.Xml.Serialization;
 using RequireJsNet.Compressor.AutoDependency;
 using RequireJsNet.Compressor.Models;
 using RequireJsNet.Configuration;
@@ -80,7 +81,7 @@ namespace RequireJsNet.Compressor.RequireProcessing
 
                         // not using filter for this since we're going to use the one the user provided in the future
                         var dirFiles = Directory.GetFiles(absDirectory, "*", SearchOption.AllDirectories).Where(r => Path.GetExtension(r) == ".js").ToList();
-                        files.AddRange(dirFiles);
+                        files.AddRange(FilterExcludes(dirFiles, bundle.Excludes));
                     }
                 }
 
@@ -130,6 +131,41 @@ namespace RequireJsNet.Compressor.RequireProcessing
             this.WriteOverrideConfigs(bundles);
 
             return bundles;
+        }
+
+        private IEnumerable<string> FilterExcludes(IEnumerable<string> dirFiles, IEnumerable<AutoBundleItem> excludes)
+        {
+            return dirFiles.Where(file => !IsExcluded(file, excludes));
+        }
+
+        private bool IsExcluded(string file, IEnumerable<AutoBundleItem> excludes)
+        {
+            return excludes.Any(exclude => IsExcluded(file, exclude));
+        }
+
+        private bool IsExcluded(string file, AutoBundleItem exclude)
+        {
+            if (exclude.File != null)
+            {
+                var physicalPath = ResolvePhysicalPath(exclude.File);
+                if (string.Equals(
+                    file,
+                    physicalPath,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            if (exclude.Directory != null)
+            {
+                var physicalDirectory =
+                    GetAbsoluteDirectory(exclude.Directory);
+                if (file.StartsWith(physicalDirectory))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void WriteOverrideConfigs(List<Bundle> bundles)
