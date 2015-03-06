@@ -414,6 +414,8 @@ namespace RequireJsNet.Compressor.Parsing
 
         private IEnumerable<string> ProcessDependencyArray(Expression depsNode, RequireCall parentCall)
         {
+            if (!(depsNode is ArrayExpression))
+                yield break;
             var depsArray = depsNode.As<ArrayExpression>();
             if (depsArray == null)
             {
