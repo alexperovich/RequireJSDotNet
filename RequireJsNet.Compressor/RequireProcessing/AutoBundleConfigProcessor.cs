@@ -81,7 +81,7 @@ namespace RequireJsNet.Compressor.RequireProcessing
 
                         // not using filter for this since we're going to use the one the user provided in the future
                         var dirFiles = Directory.GetFiles(absDirectory, "*", SearchOption.AllDirectories).Where(r => Path.GetExtension(r) == ".js").ToList();
-                        files.AddRange(FilterExcludes(dirFiles, bundle.Excludes));
+                        files.AddRange(dirFiles);
                     }
                 }
 
@@ -94,6 +94,8 @@ namespace RequireJsNet.Compressor.RequireProcessing
                 while (fileQueue.Any())
                 {
                     var file = fileQueue.Dequeue();
+                    if (IsExcluded(file, bundle.Excludes))
+                        continue;
                     var fileText = File.ReadAllText(file, encoding);
                     var relativePath = PathHelpers.GetRelativePath(file, EntryPoint + Path.DirectorySeparatorChar);
                     var processor = new ScriptProcessor(relativePath, fileText, Configuration);
@@ -131,11 +133,6 @@ namespace RequireJsNet.Compressor.RequireProcessing
             this.WriteOverrideConfigs(bundles);
 
             return bundles;
-        }
-
-        private IEnumerable<string> FilterExcludes(IEnumerable<string> dirFiles, IEnumerable<AutoBundleItem> excludes)
-        {
-            return dirFiles.Where(file => !IsExcluded(file, excludes));
         }
 
         private bool IsExcluded(string file, IEnumerable<AutoBundleItem> excludes)
