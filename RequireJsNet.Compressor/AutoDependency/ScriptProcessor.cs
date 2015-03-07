@@ -92,13 +92,12 @@ namespace RequireJsNet.Compressor.AutoDependency
             if (!result.RequireCalls.Any())
             {
                 var shim = GetShim(RelativeFileName);
-                var deps = new List<string>();
                 if (shim != null)
                 {
-                    deps = shim.Dependencies.Select(r => r.Dependency).ToList();
+                    var deps = shim.Dependencies.Select(r => r.Dependency).ToList();
+                    trans.Add(ShimFileTransformation.Create(this.CheckForConfigPath(RelativeFileName.ToModuleName()), deps));
                 }
 
-                trans.Add(ShimFileTransformation.Create(this.CheckForConfigPath(RelativeFileName.ToModuleName()), deps));
             }
             else
             {
